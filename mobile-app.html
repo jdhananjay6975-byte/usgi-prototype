@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Universal Sompo — Mobile App Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --brand:#8B1431; --on-brand:#FFF6F3;
+    --ink:#1B2026; --ink-soft:#565F6B; --ink-faint:#8A929C;
+    --paper:#F2F3F6; --surface:#FFFFFF; --line:#E3E6EA;
+    --motor:#2B5876; --motor-soft:#E7EEF2;
+    --health:#0E7C6B; --health-soft:#E3F2EE;
+    --success:#1F8A5F; --success-soft:#E5F5ED;
+    --warning:#9A6B00; --warning-soft:#FBF3DF;
+    --shadow: 0 2px 10px rgba(27,32,38,.08), 0 10px 30px rgba(27,32,38,.08);
+    --serif:'Source Serif 4', Georgia, serif;
+    --sans:'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --brand:#E08BA0; --on-brand:#2A0B13;
+      --ink:#ECEEF1; --ink-soft:#9AA3AD; --ink-faint:#6B7480;
+      --paper:#111317; --surface:#1A1D22; --line:#2A2E34;
+      --motor:#7FB3D5; --motor-soft:#1C2A33;
+      --health:#5BCBB2; --health-soft:#132A24;
+      --success:#4ADE93; --success-soft:#122A1C;
+      --warning:#E9C46A; --warning-soft:#2E2510;
+      --shadow: 0 2px 10px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --brand:#E08BA0; --on-brand:#2A0B13;
+    --ink:#ECEEF1; --ink-soft:#9AA3AD; --ink-faint:#6B7480;
+    --paper:#111317; --surface:#1A1D22; --line:#2A2E34;
+    --motor:#7FB3D5; --motor-soft:#1C2A33;
+    --health:#5BCBB2; --health-soft:#132A24;
+    --success:#4ADE93; --success-soft:#122A1C;
+    --warning:#E9C46A; --warning-soft:#2E2510;
+    --shadow: 0 2px 10px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+    display:flex; justify-content:center;
+  }
+  h1,h2,h3,h4{ font-family:var(--serif); font-weight:700; margin:0; }
+  button{ font-family:var(--sans); cursor:pointer; border:none; background:none; }
+
+  .phone{
+    width:100%; max-width:430px; min-height:100vh; background:var(--paper);
+    position:relative; display:flex; flex-direction:column;
+    padding-top: env(safe-area-inset-top,0px); padding-bottom: env(safe-area-inset-bottom,0px);
+  }
+  @media (min-width:460px){ .phone{ box-shadow:var(--shadow); min-height:100vh; } }
+
+  body::before{ content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); background:var(--surface); z-index:30; }
+
+  .appbar{ position:sticky; top:0; z-index:20; background:var(--surface); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+  .appbar .id{ display:flex; align-items:center; gap:10px; }
+  .crest{ width:32px; height:32px; border-radius:9px; background:var(--brand); color:var(--on-brand); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:14px; }
+  .appbar h2{ font-size:16px; }
+  .icon-btn{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--paper); font-size:16px; position:relative; }
+  .icon-btn .dot{ position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--brand); }
+
+  .screen{ display:none; flex:1; padding:18px 18px 100px; overflow-y:auto; }
+  .screen.active{ display:block; }
+
+  .greet{ margin-bottom:16px; }
+  .greet .hi{ font-size:13px; color:var(--ink-soft); }
+  .greet h1{ font-size:22px; margin-top:2px; }
+
+  .quick-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
+  .quick-btn{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 6px; text-align:center; font-size:11.5px; font-weight:600; color:var(--ink-soft); }
+  .quick-btn .ic{ font-size:21px; display:block; margin-bottom:6px; }
+  .quick-btn:active{ transform:scale(.96); }
+  @keyframes screenIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+  .screen.active{ animation: screenIn .22s ease; }
+  @keyframes sheetUp{ from{ transform:translateY(24px); opacity:.5;} to{ transform:translateY(0); opacity:1;} }
+  .sheet{ animation: sheetUp .25s ease; }
+  .wallet-dots{ display:flex; gap:6px; justify-content:center; margin-top:10px; }
+  .wallet-dots .dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all .2s; }
+  .wallet-dots .dot.active{ background:var(--brand); width:16px; border-radius:4px; }
+
+  .section-title{ font-size:14px; font-weight:700; margin:22px 0 10px; display:flex; justify-content:space-between; align-items:baseline; }
+  .section-title a{ font-size:12px; color:var(--brand); font-weight:600; }
+
+  .wallet-scroll{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; margin:0 -18px; padding-left:18px; padding-right:18px; }
+  .wallet-scroll::-webkit-scrollbar{ display:none; }
+  .idcard{ scroll-snap-align:start; flex:none; width:272px; height:168px; border-radius:18px; padding:18px; color:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; box-shadow:var(--shadow); }
+  .idcard.motor{ background:linear-gradient(135deg,#2B5876,#1C3A4E); }
+  .idcard.health{ background:linear-gradient(135deg,#0E7C6B,#0A5A4E); }
+  .idcard .top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .idcard .chip{ width:34px; height:24px; border-radius:5px; background:rgba(255,255,255,.35); }
+  .idcard .tag{ font-size:10px; font-weight:700; letter-spacing:.05em; background:rgba(255,255,255,.18); padding:3px 8px; border-radius:999px; }
+  .idcard h4{ font-size:15.5px; font-family:var(--sans); font-weight:700; }
+  .idcard .num{ font-size:12.5px; opacity:.85; letter-spacing:.03em; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .idcard .bottom{ display:flex; justify-content:space-between; font-size:11px; opacity:.9; }
+  .idcard .bottom b{ display:block; font-size:12.5px; font-weight:700; }
+
+  .alert-card{ display:flex; gap:10px; align-items:center; background:var(--warning-soft); color:var(--warning); border-radius:14px; padding:13px 14px; font-size:12.5px; margin-top:18px; }
+  .alert-card b{ color:var(--ink); }
+
+  .list-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .policy-detail{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .policy-detail .pt{ font-weight:700; font-size:14px; }
+  .policy-detail .ps{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .mini-chip{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .mini-chip.motor{ background:var(--motor-soft); color:var(--motor); }
+  .mini-chip.health{ background:var(--health-soft); color:var(--health); }
+  .kvrow{ display:flex; gap:18px; margin-top:10px; }
+  .kvrow .k{ font-size:10px; color:var(--ink-faint); text-transform:uppercase; }
+  .kvrow .v{ font-size:12.5px; font-weight:600; margin-top:1px; }
+  .btnrow{ display:flex; gap:8px; margin-top:12px; }
+  .pbtn{ flex:1; font-size:12px; font-weight:600; padding:8px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .pbtn.primary{ background:var(--brand); color:var(--on-brand); border-color:transparent; }
+
+  .claim-item{ display:flex; gap:12px; align-items:flex-start; }
+  .claim-ic{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; font-size:17px; }
+  .claim-item.motor .claim-ic{ background:var(--motor-soft); } .claim-item.health .claim-ic{ background:var(--health-soft); }
+  .stage-chip{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--success-soft); color:var(--success); white-space:nowrap; }
+  .stage-chip.early{ background:var(--warning-soft); color:var(--warning); }
+  .bar{ height:5px; border-radius:4px; background:var(--line); margin-top:8px; overflow:hidden; }
+  .bar i{ display:block; height:100%; background:var(--brand); border-radius:4px; }
+
+  .fab{ position:fixed; z-index:25; right:calc(50% - 215px + 18px); bottom:calc(86px + env(safe-area-inset-bottom,0px)); width:54px; height:54px; border-radius:50%; background:var(--brand); color:var(--on-brand); font-size:24px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); }
+  @media (max-width:466px){ .fab{ right:18px; } }
+
+  .tabbar{ position:sticky; bottom:0; z-index:25; background:var(--surface); border-top:1px solid var(--line); display:flex; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px)); }
+  .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; color:var(--ink-faint); font-weight:600; padding:6px 0; border-radius:10px; }
+  .tab.active{ color:var(--brand); }
+  .tab .tic{ font-size:19px; }
+
+  .svc-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+  .svc-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .svc-head .ic{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; background:var(--motor-soft); }
+  .svc-head h4{ font-size:14.5px; font-family:var(--sans); font-weight:700; }
+  .svc-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .svc-grid button{ background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:10px 4px; font-size:11px; font-weight:600; color:var(--ink-soft); text-align:center; }
+  .svc-grid button .ic{ display:block; font-size:18px; margin-bottom:4px; }
+  .dispatch{ margin-top:12px; background:var(--health-soft); color:var(--health); border-radius:12px; padding:12px; font-size:12.5px; display:none; }
+  .dispatch b{ color:var(--ink); }
+
+  .hosp-item{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .hosp-item:last-child{ border:none; }
+  .hosp-item .nm{ font-weight:600; } .hosp-item .dist{ font-size:11.5px; color:var(--ink-soft); }
+
+  .symp-chat{ background:var(--paper); border-radius:12px; padding:12px; min-height:60px; }
+  .bubble{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.5px; margin-bottom:8px; max-width:90%; }
+  .bubble.me{ margin-left:auto; background:var(--brand); color:var(--on-brand); border:none; }
+  .opt-row{ display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+  .opt-row button{ font-size:12px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); }
+
+  .profile-head{ text-align:center; padding:16px 0 20px; }
+  .big-avatar{ width:72px; height:72px; border-radius:50%; background:var(--motor-soft); color:var(--motor); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; margin:0 auto 10px; }
+  .kyc-pill{ display:inline-block; margin-top:8px; font-size:11.5px; font-weight:700; padding:4px 12px; border-radius:999px; background:var(--success-soft); color:var(--success); }
+  .settings-row{ display:flex; justify-content:space-between; align-items:center; padding:13px 2px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .settings-row:last-of-type{ border:none; }
+  .settings-row .r{ color:var(--ink-faint); font-size:12px; }
+
+  /* Claim wizard sheet */
+  .sheet-backdrop{ position:fixed; inset:0; background:rgba(10,12,15,.5); z-index:50; display:none; align-items:flex-end; justify-content:center; }
+  .sheet{ width:100%; max-width:430px; background:var(--surface); border-radius:22px 22px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px)); max-height:86vh; overflow-y:auto; }
+  .sheet-handle{ width:40px; height:4px; border-radius:4px; background:var(--line); margin:0 auto 14px; }
+  .sheet h3{ font-size:17px; margin-bottom:4px; }
+  .step-dots{ display:flex; gap:6px; margin:14px 0 18px; }
+  .step-dots span{ height:4px; flex:1; border-radius:4px; background:var(--line); }
+  .step-dots span.on{ background:var(--brand); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:6px; font-weight:600; }
+  select, textarea{ width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:13.5px; font-family:var(--sans); }
+  textarea{ min-height:64px; resize:vertical; }
+  .upload-box{ border:1.5px dashed var(--line); border-radius:12px; padding:20px; text-align:center; font-size:12.5px; color:var(--ink-soft); }
+  .thumbs{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .thumbs img{ width:58px; height:58px; object-fit:cover; border-radius:8px; border:1px solid var(--line); }
+  .spinner{ width:28px; height:28px; border:3px solid var(--line); border-top-color:var(--brand); border-radius:50%; animation:spin .8s linear infinite; margin:16px auto; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .assess-box{ background:var(--health-soft); border:1px solid color-mix(in srgb, var(--health) 30%, transparent); border-radius:12px; padding:14px; }
+  .assess-box .big{ font-family:var(--serif); font-size:19px; font-weight:700; color:var(--health); }
+  .sheet-foot{ display:flex; gap:10px; margin-top:16px; }
+  .btn{ border:none; border-radius:11px; padding:13px; font-size:13.5px; font-weight:700; width:100%; }
+  .btn-primary{ background:var(--brand); color:var(--on-brand); }
+  .btn-ghost{ background:var(--paper); color:var(--ink-soft); border:1px solid var(--line); }
+
+  .toast{ position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:11px 18px; border-radius:10px; font-size:13px; opacity:0; transition:all .25s; z-index:80; pointer-events:none; max-width:85%; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="appbar">
+    <div class="id"><div class="crest">US</div><h2>Pulz</h2></div>
+    <div style="display:flex; gap:8px;">
+      <button class="icon-btn" onclick="toggleNotif()">🔔<span class="dot"></span></button>
+      <button class="icon-btn" onclick="go('profile')">👤</button>
+    </div>
+  </div>
+
+  <div id="notifPanel" style="display:none; position:absolute; top:60px; right:14px; width:260px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); z-index:40; overflow:hidden;">
+    <div style="padding:12px 14px; font-weight:700; font-size:13px; border-bottom:1px solid var(--line);">Notifications</div>
+    <div style="padding:12px 14px; border-bottom:1px solid var(--line); font-size:12.5px;"><b>Claim CLM-402217</b><br><span style="color:var(--ink-soft);">Your claim has been assessed — ₹18,500–₹24,000 estimated.</span></div>
+    <div style="padding:12px 14px; font-size:12.5px;"><b>Renewal reminder</b><br><span style="color:var(--ink-soft);">Complete Healthcare renews in 12 days.</span></div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="greet"><div class="hi">Welcome back</div><h1>Dhananjay Jain</h1></div>
+
+    <div class="quick-row">
+      <button class="quick-btn" onclick="openWizard()"><span class="ic">📋</span>File claim</button>
+      <button class="quick-btn" onclick="go('services')"><span class="ic">🛟</span>Roadside</button>
+      <button class="quick-btn" onclick="openRenewFlow('health')"><span class="ic">🔄</span>Renew</button>
+      <button class="quick-btn" onclick="toast('Opening Buy New journey (demo)')"><span class="ic">➕</span>Buy new</button>
+    </div>
+
+    <div class="section-title">Your wallet</div>
+    <div class="wallet-scroll" id="walletScroll">
+      <div class="idcard motor" onclick="openPolicyDetail('motor')">
+        <div class="top"><div class="chip"></div><span class="tag">MOTOR</span></div>
+        <div><h4>Hyundai i20 Sportz</h4><div class="num">POL-MT-88213 · HR-26-BT-4471</div></div>
+        <div class="bottom"><div>IDV<b>₹4,80,000</b></div><div>Expires<b>14 Mar '27</b></div></div>
+      </div>
+      <div class="idcard health" onclick="openPolicyDetail('health')">
+        <div class="top"><div class="chip"></div><span class="tag">HEALTH</span></div>
+        <div><h4>Complete Healthcare</h4><div class="num">POL-HL-55012 · 3 members</div></div>
+        <div class="bottom"><div>Sum insured<b>₹5,00,000</b></div><div>Expires<b>03 Dec '26</b></div></div>
+      </div>
+    </div>
+    <div class="wallet-dots"><span class="dot active"></span><span class="dot"></span></div>
+
+    <div class="alert-card">⚠️ <span><b>Complete Healthcare</b> renews in 12 days. <a href="#" onclick="openRenewFlow('health'); return false;" style="color:inherit; font-weight:700;">Renew now</a></span></div>
+
+    <div class="section-title">Recent claim <a href="#" onclick="go('claims'); return false;">See all →</a></div>
+    <div class="list-card claim-item motor">
+      <div class="claim-ic">🚗</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between;"><b style="font-size:13.5px;">CLM-402217</b><span class="stage-chip">Assessed</span></div>
+        <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">Front bumper damage · Filed 02 Nov</div>
+        <div class="bar"><i style="width:60%"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POLICIES -->
+  <div class="screen" id="s-policies">
+    <h1 style="font-size:20px; margin-bottom:16px;">My Policies</h1>
+    <div class="list-card" onclick="openPolicyDetail('motor')">
+      <div class="policy-detail">
+        <div><div class="pt">Motor Private Car</div><div class="ps">Hyundai i20 Sportz · HR-26-BT-4471</div></div>
+        <span class="mini-chip motor">ACTIVE</span>
+      </div>
+      <div class="kvrow"><div><div class="k">IDV</div><div class="v">₹4,80,000</div></div><div><div class="k">Expires</div><div class="v">14 Mar '27</div></div><div><div class="k">Premium</div><div class="v">₹7,210/yr</div></div></div>
+      <div class="btnrow"><button class="pbtn" onclick="event.stopPropagation(); toast('Downloading PDF (demo)')">Download</button><button class="pbtn primary" onclick="event.stopPropagation(); openRenewFlow('motor')">Renew</button></div>
+    </div>
+    <div class="list-card" onclick="openPolicyDetail('health')">
+      <div class="policy-detail">
+        <div><div class="pt">Complete Healthcare</div><div class="ps">Family Floater · 3 members</div></div>
+        <span class="mini-chip health">RENEWAL DUE</span>
+      </div>
+      <div class="kvrow"><div><div class="k">Sum insured</div><div class="v">₹5,00,000</div></div><div><div class="k">Expires</div><div class="v">03 Dec '26</div></div><div><div class="k">Premium</div><div class="v">₹18,640/yr</div></div></div>
+      <div class="btnrow"><button class="pbtn" onclick="event.stopPropagation(); toast('Downloading PDF (demo)')">Download</button><button class="pbtn primary" onclick="event.stopPropagation(); openRenewFlow('health')">Renew</button></div>
+    </div>
+  </div>
+
+  <!-- CLAIMS -->
+  <div class="screen" id="s-claims">
+    <h1 style="font-size:20px; margin-bottom:16px;">Claims</h1>
+    <div class="list-card claim-item motor">
+      <div class="claim-ic">🚗</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between;"><b style="font-size:13.5px;">CLM-402217</b><span class="stage-chip">Assessed</span></div>
+        <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">Front bumper damage · Filed 02 Nov</div>
+        <div class="bar"><i style="width:60%"></i></div>
+      </div>
+    </div>
+    <div id="newClaimsList"></div>
+    <div style="text-align:center; margin-top:18px;">
+      <button class="pbtn primary" style="width:auto; padding:11px 22px;" onclick="openWizard()">+ File a new claim</button>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="screen" id="s-services">
+    <h1 style="font-size:20px; margin-bottom:16px;">Services</h1>
+
+    <div class="svc-card">
+      <div class="svc-head"><div class="ic">🛟</div><h4>24×7 Roadside Assistance</h4></div>
+      <div class="svc-grid">
+        <button onclick="dispatch('Flat tyre')"><span class="ic">🛞</span>Flat tyre</button>
+        <button onclick="dispatch('Battery')"><span class="ic">🔋</span>Battery</button>
+        <button onclick="dispatch('Towing')"><span class="ic">🚛</span>Towing</button>
+        <button onclick="dispatch('Fuel')"><span class="ic">⛽</span>Fuel</button>
+      </div>
+      <div class="dispatch" id="dispatchBox"></div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-head"><div class="ic" style="background:var(--health-soft);">🏥</div><h4>Cashless hospitals near you</h4></div>
+      <div class="hosp-item"><div><div class="nm">Max Healthcare, Saket</div><div class="dist">2.1 km · Cashless</div></div><button class="pbtn" style="width:auto; padding:7px 14px;" onclick="toast('Calling hospital (demo)')">Call</button></div>
+      <div class="hosp-item"><div><div class="nm">Fortis Escorts</div><div class="dist">3.6 km · Cashless</div></div><button class="pbtn" style="width:auto; padding:7px 14px;" onclick="toast('Calling hospital (demo)')">Call</button></div>
+      <div class="hosp-item"><div><div class="nm">Apollo Spectra</div><div class="dist">5.0 km · Cashless</div></div><button class="pbtn" style="width:auto; padding:7px 14px;" onclick="toast('Calling hospital (demo)')">Call</button></div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-head"><div class="ic" style="background:var(--health-soft);">🩺</div><h4>AI symptom checker</h4></div>
+      <div class="symp-chat" id="sympChat">
+        <div class="bubble">Hi, what's bothering you today?</div>
+        <div class="opt-row" id="sympOpts">
+          <button onclick="sympAnswer('Fever')">Fever</button>
+          <button onclick="sympAnswer('Headache')">Headache</button>
+          <button onclick="sympAnswer('Stomach pain')">Stomach pain</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="s-profile">
+    <div class="profile-head">
+      <div class="big-avatar">DJ</div>
+      <h3 style="font-size:17px;">Dhananjay Jain</h3>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-top:2px;">dhananjay.jain@pelocal.com</div>
+      <div class="kyc-pill">✓ KYC Verified</div>
+    </div>
+    <div class="list-card" style="border-color:var(--motor); display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-weight:700; font-size:13.5px;">🚑 Emergency contact</span>
+      <span style="font-weight:700; color:var(--motor);">108 · always visible</span>
+    </div>
+    <div class="list-card">
+      <div class="settings-row"><span>Linked policies</span><span class="r">2 active</span></div>
+      <div class="settings-row"><span>Notification preferences</span><span class="r">WhatsApp, Push ›</span></div>
+      <div class="settings-row"><span>Linked bank account</span><span class="r">••••4471 ›</span></div>
+      <div class="settings-row"><span>Language</span><span class="r">English ›</span></div>
+      <div class="settings-row"><span>Help &amp; support</span><span class="r">›</span></div>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:16px;" onclick="location.reload()">Log out</button>
+  </div>
+
+  <button class="fab" id="fabBtn" onclick="openWizard()">+</button>
+
+  <div class="tabbar">
+    <button class="tab active" data-s="home" onclick="go('home')"><span class="tic">🏠</span>Home</button>
+    <button class="tab" data-s="policies" onclick="go('policies')"><span class="tic">🗂️</span>Policies</button>
+    <button class="tab" data-s="claims" onclick="go('claims')"><span class="tic">📄</span>Claims</button>
+    <button class="tab" data-s="services" onclick="go('services')"><span class="tic">🧰</span>Services</button>
+    <button class="tab" data-s="profile" onclick="go('profile')"><span class="tic">👤</span>Profile</button>
+  </div>
+</div>
+
+<!-- CLAIM WIZARD SHEET -->
+<div class="sheet-backdrop" id="wizard">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="wTitle">File a new claim</h3>
+    <div class="step-dots"><span class="on" id="wd1"></span><span id="wd2"></span><span id="wd3"></span><span id="wd4"></span></div>
+
+    <div id="w1">
+      <div class="field"><label>Select policy</label>
+        <select id="wPolicy">
+          <option value="motor">Motor — Hyundai i20 (POL-MT-88213)</option>
+          <option value="health">Health — Family Floater (POL-HL-55012)</option>
+        </select>
+      </div>
+      <div class="field"><label>What happened?</label><textarea id="wDesc">Minor front-bumper collision while parking.</textarea></div>
+    </div>
+
+    <div id="w2" style="display:none">
+      <div class="field"><label>Add photos</label>
+        <div class="upload-box">📷 Tap to capture or choose photos
+          <div><label class="pbtn primary" style="display:inline-block; width:auto; margin-top:10px; padding:8px 16px;">Choose photo<input type="file" accept="image/*" multiple style="display:none" onchange="handleFiles(this)"></label></div>
+        </div>
+        <div class="thumbs" id="wThumbs"></div>
+      </div>
+    </div>
+
+    <div id="w3" style="display:none; text-align:center;">
+      <div id="wAssessing"><div class="spinner"></div><div style="font-size:13px; color:var(--ink-soft);">Running AI damage assessment…</div></div>
+      <div id="wAssessed" style="display:none; text-align:left;"><div class="assess-box" id="wAssessBox"></div></div>
+    </div>
+
+    <div id="w4" style="display:none; text-align:center; padding:6px 0;">
+      <div style="font-size:36px;">✅</div>
+      <h3 style="margin:8px 0 4px;">Claim intimated</h3>
+      <div style="font-size:12.5px; color:var(--ink-soft);">Claim number</div>
+      <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--brand);" id="wNewId">CLM-000000</div>
+    </div>
+
+    <div class="sheet-foot">
+      <button class="btn btn-ghost" id="wBack" onclick="wizBack()">Back</button>
+      <button class="btn btn-primary" id="wNext" onclick="wizNext()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="detailSheet" onclick="if(event.target===this) closeDetailSheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function go(s){
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
+  document.getElementById('s-'+s).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.s===s));
+  document.getElementById('fabBtn').style.display = s==='claims'?'none':'flex';
+  window.scrollTo(0,0);
+}
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show');
+  clearTimeout(window._tt); window._tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Roadside dispatch
+function dispatch(kind){
+  const box = document.getElementById('dispatchBox');
+  box.style.display='block';
+  box.innerHTML = '⏳ Requesting assistance for <b>'+kind+'</b>…';
+  setTimeout(()=>{
+    box.innerHTML = '✅ <b>Help is on the way</b> — ETA 18 min. Agent: Ramesh K. · Vehicle: Tow Truck DL 1 TB 2290 <div style="margin-top:8px; display:flex; gap:8px;"><button class="pbtn primary" style="width:auto; padding:6px 14px;" onclick="toast(\'Calling agent (demo)\')">Call agent</button></div>';
+  }, 1300);
+}
+
+// Symptom checker (lightweight, non-diagnostic demo)
+function sympAnswer(ans){
+  const chat = document.getElementById('sympChat');
+  const responses = {
+    'Fever': 'Noted. How many days has the fever lasted?',
+    'Headache': 'Got it. Is it a one-sided or an all-over headache?',
+    'Stomach pain': 'Understood. Is the pain more in the upper or lower abdomen?',
+    '1-2 days': 'This is commonly linked to seasonal flu. Rest, fluids, and monitoring are usually enough — but please consult a doctor if it crosses 3 days or you feel worse.',
+    '3+ days': 'A fever lasting 3+ days is worth getting checked by a doctor rather than waiting it out.',
+    'One-sided': 'That pattern is sometimes linked to a migraine-type headache — if it recurs often, a doctor consultation is worth booking.',
+    'All-over': 'This is often tension-related. Hydration and rest help, but see a doctor if it persists.',
+    'Upper': 'This can have several causes — best to get it looked at rather than self-diagnose.',
+    'Lower': 'Noted — if this is sudden or severe, please seek care promptly rather than waiting.'
+  };
+  const bubble = document.createElement('div'); bubble.className='bubble me'; bubble.innerText = ans;
+  chat.insertBefore(bubble, document.getElementById('sympOpts'));
+  let next = document.createElement('div'); next.className='bubble';
+  const nextOpts = document.createElement('div'); nextOpts.className='opt-row';
+  if(['Fever'].includes(ans)){ next.innerText = responses[ans]; nextOpts.innerHTML = '<button onclick="sympAnswer(\'1-2 days\')">1–2 days</button><button onclick="sympAnswer(\'3+ days\')">3+ days</button>'; }
+  else if(['Headache'].includes(ans)){ next.innerText = responses[ans]; nextOpts.innerHTML = '<button onclick="sympAnswer(\'One-sided\')">One-sided</button><button onclick="sympAnswer(\'All-over\')">All-over</button>'; }
+  else if(['Stomach pain'].includes(ans)){ next.innerText = responses[ans]; nextOpts.innerHTML = '<button onclick="sympAnswer(\'Upper\')">Upper</button><button onclick="sympAnswer(\'Lower\')">Lower</button>'; }
+  else {
+    next.innerText = responses[ans] || 'Thanks — noted.';
+    nextOpts.innerHTML = '<button onclick="toast(\'Opening doctor booking (demo)\')">Book a doctor</button>';
+  }
+  chat.appendChild(next); chat.appendChild(nextOpts);
+  const old = document.getElementById('sympOpts'); old.remove();
+  nextOpts.id='sympOpts';
+  chat.scrollTop = chat.scrollHeight;
+  if(responses[ans] && responses[ans].length>60){
+    const note = document.createElement('div'); note.style.fontSize='10.5px'; note.style.color='var(--ink-faint)'; note.style.marginTop='4px';
+    note.innerText = 'This is general guidance, not a medical diagnosis.';
+    chat.appendChild(note);
+  }
+}
+
+// Claim wizard
+let wStep=1, wFiles=0, claimSeq=402218;
+function openWizard(){
+  wStep=1; wFiles=0;
+  document.getElementById('wThumbs').innerHTML='';
+  ['w1','w2','w3','w4'].forEach((id,i)=>document.getElementById(id).style.display = i===0?'block':'none');
+  document.getElementById('wAssessing').style.display='block';
+  document.getElementById('wAssessed').style.display='none';
+  ['wd1','wd2','wd3','wd4'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i===0));
+  document.getElementById('wNext').innerText='Continue';
+  document.getElementById('wBack').style.display='inline-block';
+  document.getElementById('wizard').style.display='flex';
+}
+function closeWizard(){ document.getElementById('wizard').style.display='none'; }
+function wizBack(){ if(wStep<=1) return; wStep--; updateWiz(); }
+function wizNext(){
+  if(wStep===4){ closeWizard(); return; }
+  if(wStep===2 && wFiles===0){ toast('Add at least one photo to continue'); return; }
+  wStep++; updateWiz();
+  if(wStep===3){
+    setTimeout(()=>{
+      document.getElementById('wAssessing').style.display='none';
+      document.getElementById('wAssessed').style.display='block';
+      const type = document.getElementById('wPolicy').value;
+      const box = document.getElementById('wAssessBox');
+      box.innerHTML = type==='motor'
+        ? '<div style="font-size:11.5px; color:var(--health); font-weight:700; text-transform:uppercase;">AI damage estimate</div><div class="big">₹18,500–₹24,000</div><div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">Subject to surveyor confirmation</div>'
+        : '<div style="font-size:11.5px; color:var(--health); font-weight:700; text-transform:uppercase;">Pre-authorisation</div><div class="big">Cashless eligible</div><div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">TPA will confirm final approval</div>';
+    }, 1300);
+  }
+  if(wStep===4){
+    const newId='CLM-'+(claimSeq++);
+    document.getElementById('wNewId').innerText=newId;
+    const type = document.getElementById('wPolicy').value;
+    const row = document.createElement('div');
+    row.className='list-card claim-item '+type;
+    row.innerHTML = `<div class="claim-ic">${type==='motor'?'🚗':'➕'}</div><div style="flex:1;"><div style="display:flex; justify-content:space-between;"><b style="font-size:13.5px;">${newId}</b><span class="stage-chip early">Intimated</span></div><div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">${document.getElementById('wDesc').value.slice(0,32)}</div><div class="bar"><i style="width:10%"></i></div></div>`;
+    document.getElementById('newClaimsList').prepend(row);
+    document.getElementById('wNext').innerText='Done';
+    document.getElementById('wBack').style.display='none';
+  }
+}
+function updateWiz(){
+  ['w1','w2','w3','w4'].forEach((id,i)=>document.getElementById(id).style.display=(i+1===wStep)?'block':'none');
+  ['wd1','wd2','wd3','wd4'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i<wStep));
+}
+function handleFiles(input){
+  const wrap = document.getElementById('wThumbs');
+  [...input.files].forEach(f=>{
+    wFiles++;
+    const reader = new FileReader();
+    reader.onload = e=>{ const img=document.createElement('img'); img.src=e.target.result; wrap.appendChild(img); };
+    reader.readAsDataURL(f);
+  });
+}
+
+function toggleNotif(){
+  const p = document.getElementById('notifPanel');
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
+}
+
+function nextYearShort(){ const d=new Date(); d.setFullYear(d.getFullYear()+1); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+
+function openPolicyDetail(type){
+  const data = type==='motor'
+    ? { title:'Motor Private Car', sub:'Hyundai i20 Sportz · HR-26-BT-4471', rows:[['Policy No.','POL-MT-88213'],['IDV','₹4,80,000'],['Premium','₹7,210/yr'],['Expires','14 Mar 2027'],['Add-ons','Zero Dep, RSA']] }
+    : { title:'Complete Healthcare', sub:'Family Floater · 3 members', rows:[['Policy No.','POL-HL-55012'],['Sum insured','₹5,00,000'],['Premium','₹18,640/yr'],['Expires','03 Dec 2026'],['Members','Self, Spouse, Child']] };
+  const docs = ['Policy Schedule.pdf','Policy Wording.pdf','Premium Receipt.pdf'];
+  document.getElementById('detailContent').innerHTML = `
+    <h3 style="font-size:17px; margin-bottom:2px;">${data.title}</h3>
+    <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">${data.sub}</div>
+    <div class="list-card">
+      ${data.rows.map(r=>`<div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px;"><span style="color:var(--ink-soft);">${r[0]}</span><b>${r[1]}</b></div>`).join('')}
+    </div>
+    <div style="font-size:12px; font-weight:700; color:var(--ink-soft); margin:16px 0 8px; text-transform:uppercase; letter-spacing:.04em;">Documents</div>
+    ${docs.map((d,i)=>`<div class="list-card" style="display:flex; align-items:center; justify-content:space-between; padding:11px 14px;" id="doc-${i}">
+      <span style="font-size:13px;">📄 ${d}</span>
+      <button class="pbtn" style="width:auto; padding:6px 12px;" onclick="downloadDoc(${i})">Download</button>
+    </div>`).join('')}
+    <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeDetailSheet()">Close</button>
+  `;
+  document.getElementById('detailSheet').style.display='flex';
+}
+function downloadDoc(i){
+  const el = document.getElementById('doc-'+i).querySelector('button');
+  el.innerText='Downloading…';
+  setTimeout(()=>{ el.innerText='✓ Saved'; }, 900);
+}
+function closeDetailSheet(){ document.getElementById('detailSheet').style.display='none'; }
+
+function openRenewFlow(type){
+  const data = type==='motor' ? {name:'Motor Private Car', premium:7210} : {name:'Complete Healthcare', premium:18640};
+  document.getElementById('detailContent').innerHTML = `
+    <h3 style="font-size:17px; margin-bottom:10px;">Renew ${data.name}</h3>
+    <div class="list-card">
+      <div style="font-size:13px; color:var(--ink-soft);">Same coverage, same terms — just extending your policy by one year.</div>
+      <div style="margin-top:12px;"><div style="font-size:10px; color:var(--ink-faint); text-transform:uppercase;">Renewal premium</div><div style="font-size:18px; font-weight:700;">₹${data.premium.toLocaleString('en-IN')}</div></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px;" onclick="payRenewal(${data.premium})">Pay ₹${data.premium.toLocaleString('en-IN')} via UPI</button>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="closeDetailSheet()">Not now</button>
+  `;
+  document.getElementById('detailSheet').style.display='flex';
+}
+function payRenewal(amt){
+  document.getElementById('detailContent').innerHTML = `<div style="text-align:center; padding:20px 0;"><div class="spinner"></div><div style="font-size:13px; color:var(--ink-soft);">Processing payment…</div></div>`;
+  setTimeout(()=>{
+    document.getElementById('detailContent').innerHTML = `
+      <div style="text-align:center; padding:6px 0;">
+        <div style="font-size:40px;">✅</div>
+        <h3 style="margin:10px 0 4px;">Policy renewed!</h3>
+        <div style="font-size:12.5px; color:var(--ink-soft);">New validity: Today – ${nextYearShort()}</div>
+        <button class="btn btn-primary" style="margin-top:18px;" onclick="closeDetailSheet()">Done</button>
+      </div>`;
+  }, 1500);
+}
+
+(function(){
+  const ws = document.getElementById('walletScroll');
+  if(!ws) return;
+  ws.addEventListener('scroll', ()=>{
+    const idx = Math.round(ws.scrollLeft / (ws.firstElementChild.offsetWidth+12));
+    document.querySelectorAll('.wallet-dots .dot').forEach((d,i)=>d.classList.toggle('active', i===idx));
+  });
+})();
+</script>
+</body>
+</html>

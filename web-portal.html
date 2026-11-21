@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Universal Sompo — Customer Portal (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --brand:#8B1431; --brand-ink:#5C0E21; --on-brand:#FFF6F3;
+    --ink:#1B2026; --ink-soft:#565F6B; --ink-faint:#88919B;
+    --paper:#F2F3F6; --surface:#FFFFFF; --line:#E2E5EA;
+    --motor:#2B5876; --motor-soft:#E7EEF2;
+    --health:#0E7C6B; --health-soft:#E3F2EE;
+    --success:#1F8A5F; --success-soft:#E5F5ED;
+    --warning:#9A6B00; --warning-soft:#FBF3DF;
+    --danger:#B3261E; --danger-soft:#FCE8E6;
+    --shadow: 0 1px 2px rgba(27,32,38,.06), 0 8px 24px rgba(27,32,38,.06);
+    --serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --sans:'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --brand:#E08BA0; --brand-ink:#F2B9C6; --on-brand:#2A0B13;
+      --ink:#ECEEF1; --ink-soft:#9AA3AD; --ink-faint:#6B7480;
+      --paper:#14171B; --surface:#1C2024; --line:#2B3036;
+      --motor:#7FB3D5; --motor-soft:#1C2A33;
+      --health:#5BCBB2; --health-soft:#132A24;
+      --success:#4ADE93; --success-soft:#122A1C;
+      --warning:#E9C46A; --warning-soft:#2E2510;
+      --danger:#F2887E; --danger-soft:#331514;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --brand:#E08BA0; --brand-ink:#F2B9C6; --on-brand:#2A0B13;
+    --ink:#ECEEF1; --ink-soft:#9AA3AD; --ink-faint:#6B7480;
+    --paper:#14171B; --surface:#1C2024; --line:#2B3036;
+    --motor:#7FB3D5; --motor-soft:#1C2A33;
+    --health:#5BCBB2; --health-soft:#132A24;
+    --success:#4ADE93; --success-soft:#122A1C;
+    --warning:#E9C46A; --warning-soft:#2E2510;
+    --danger:#F2887E; --danger-soft:#331514;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{ scroll-padding-top: env(safe-area-inset-top,0px); }
+  body{
+    margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+    padding-top: env(safe-area-inset-top,0px); padding-bottom: env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:var(--serif); font-weight:600; margin:0; letter-spacing:-.01em; }
+  button{ font-family:var(--sans); cursor:pointer; }
+  input,select,textarea{ font-family:var(--sans); }
+  a{ color:inherit; }
+
+  /* ---------- Login ---------- */
+  #loginScreen{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(1100px 500px at 15% -10%, var(--health-soft), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, var(--motor-soft), transparent 55%),
+      var(--paper);
+    padding:24px;
+  }
+  .login-card{ width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:36px 32px; box-shadow:var(--shadow); }
+  .brandmark{ display:flex; align-items:center; gap:10px; margin-bottom:28px; }
+  .brandmark .crest{ width:38px; height:38px; border-radius:10px; background:var(--brand); color:var(--on-brand); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:16px; }
+  .brandmark .name{ font-size:14px; line-height:1.3; }
+  .brandmark .name b{ display:block; font-size:15px; }
+  .login-card h2{ font-size:24px; margin-bottom:6px; }
+  .login-sub{ color:var(--ink-soft); font-size:14px; margin-bottom:26px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px; font-weight:500; }
+  .field input{ width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:14.5px; outline:none; transition:border-color .15s; }
+  .field input:focus{ border-color:var(--brand); }
+  .btn{ border:none; border-radius:10px; padding:12px 18px; font-size:14.5px; font-weight:600; width:100%; transition:transform .1s, opacity .15s; }
+  .btn:active{ transform:scale(.98); }
+  .btn-primary{ background:var(--brand); color:var(--on-brand); }
+  .btn-primary:hover{ opacity:.92; }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .otp-row{ display:flex; gap:8px; margin-bottom:18px; }
+  .otp-row input{ width:44px; height:52px; text-align:center; font-size:20px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .login-foot{ margin-top:18px; font-size:12.5px; color:var(--ink-faint); text-align:center; }
+  .login-demo-note{ margin-top:14px; font-size:12px; color:var(--ink-faint); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:10px 12px; }
+
+  /* ---------- App shell ---------- */
+  #app{ display:none; min-height:100%; }
+  .shell{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:232px; flex:none; background:var(--surface); border-right:1px solid var(--line);
+    padding:20px 14px; display:flex; flex-direction:column; gap:4px;
+    position:sticky; top:0; height:100vh;
+  }
+  .sidebar .brandmark{ padding:6px 8px 20px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+  .nav-item{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; color:var(--ink-soft); font-size:14px; font-weight:500; background:none; border:none; text-align:left; width:100%; }
+  .nav-item svg{ width:18px; height:18px; flex:none; }
+  .nav-item:hover{ background:var(--paper); color:var(--ink); }
+  .nav-item.active{ background:var(--brand); color:var(--on-brand); }
+  .sidebar-foot{ margin-top:auto; padding-top:14px; border-top:1px solid var(--line); }
+
+  .main{ flex:1; min-width:0; padding: 26px 34px 60px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap; }
+  .topbar h1{ font-size:26px; }
+  .topbar .sub{ color:var(--ink-soft); font-size:14px; margin-top:4px; }
+  .avatar{ width:38px; height:38px; border-radius:50%; background:var(--motor-soft); color:var(--motor); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex:none; }
+
+  .banner{ display:flex; align-items:center; gap:12px; background:var(--warning-soft); border:1px solid color-mix(in srgb, var(--warning) 35%, transparent); color:var(--warning); border-radius:12px; padding:13px 16px; margin-bottom:22px; font-size:13.5px; }
+  .banner svg{ width:18px; height:18px; flex:none; }
+  .banner b{ color:var(--ink); }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:26px; }
+  .stat-tile{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .stat-tile .num{ font-family:var(--serif); font-size:28px; font-weight:600; }
+  .stat-tile .lbl{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin:30px 0 14px; }
+  .section-head h3{ font-size:17px; }
+  .section-head:first-child{ margin-top:0; }
+
+  /* Ticket-style policy card */
+  .policy-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; }
+  .policy-card{ position:relative; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .policy-card .band{ height:7px; }
+  .policy-card.motor .band{ background:var(--motor); }
+  .policy-card.health .band{ background:var(--health); }
+  .policy-top{ padding:18px 20px 14px; display:flex; justify-content:space-between; gap:10px; }
+  .policy-top .tag{ font-size:11px; font-weight:700; letter-spacing:.02em; padding:3px 9px; border-radius:999px; }
+  .policy-card.motor .tag{ background:var(--motor-soft); color:var(--motor); }
+  .policy-card.health .tag{ background:var(--health-soft); color:var(--health); }
+  .policy-top h4{ font-size:18px; margin-top:8px; }
+  .policy-top .pno{ font-size:12px; color:var(--ink-faint); margin-top:2px; font-variant-numeric:tabular-nums; }
+  .status-pill{ font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--success-soft); color:var(--success); height:fit-content; white-space:nowrap; }
+  .perforation{ position:relative; height:1px; background:repeating-linear-gradient(to right, var(--line) 0 6px, transparent 6px 12px); margin:0 20px; }
+  .perforation::before, .perforation::after{ content:""; position:absolute; top:-9px; width:18px; height:18px; border-radius:50%; background:var(--paper); border:1px solid var(--line); }
+  .perforation::before{ left:-29px; }
+  .perforation::after{ right:-29px; }
+  .policy-body{ padding:16px 20px 18px; display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; }
+  .policy-body .kv .k{ font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .policy-body .kv .v{ font-size:14px; font-weight:600; margin-top:2px; }
+  .policy-actions{ display:flex; gap:8px; padding:0 20px 18px; }
+  .btn-sm{ flex:1; padding:9px 10px; font-size:12.5px; font-weight:600; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .btn-sm.primary{ background:var(--brand); color:var(--on-brand); border-color:transparent; }
+
+  /* Claims */
+  .claims-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+  .claim-row{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; cursor:pointer; }
+  .claim-row:hover{ border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); }
+  .claim-left{ display:flex; align-items:center; gap:14px; }
+  .claim-icon{ width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .claim-row.motor .claim-icon{ background:var(--motor-soft); color:var(--motor); }
+  .claim-row.health .claim-icon{ background:var(--health-soft); color:var(--health); }
+  .claim-id{ font-weight:600; font-size:14.5px; }
+  .claim-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .chip{ font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:999px; }
+  .chip.intimated{ background:var(--warning-soft); color:var(--warning); }
+  .chip.progress{ background:var(--motor-soft); color:var(--motor); }
+  .chip.settled{ background:var(--success-soft); color:var(--success); }
+
+  .timeline{ display:flex; gap:0; margin-top:14px; }
+  .tl-step{ flex:1; text-align:center; position:relative; font-size:11.5px; color:var(--ink-faint); }
+  .tl-step .dot{ width:14px; height:14px; border-radius:50%; background:var(--line); margin:0 auto 6px; border:2px solid var(--surface); box-shadow:0 0 0 1px var(--line); }
+  .tl-step.done .dot{ background:var(--success); box-shadow:0 0 0 1px var(--success); }
+  .tl-step.current .dot{ background:var(--brand); box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent); }
+  .tl-step::before{ content:""; position:absolute; top:6px; left:-50%; width:100%; height:2px; background:var(--line); z-index:-1; }
+  .tl-step:first-child::before{ display:none; }
+  .tl-step.done::before{ background:var(--success); }
+  .tl-step.current span{ color:var(--ink); font-weight:600; }
+
+  /* Calculator */
+  .calc-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+  .locate-tabs{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+  .locate-tab{ padding:9px 16px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:13.5px; font-weight:600; color:var(--ink-soft); }
+  .locate-tab.active{ background:var(--brand); color:var(--on-brand); border-color:transparent; }
+  .locate-row{ display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:10px; gap:14px; }
+  .locate-row .li{ display:flex; gap:12px; align-items:center; }
+  .locate-row .ic{ width:40px; height:40px; border-radius:10px; background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:18px; flex:none; }
+  .locate-row .nm{ font-weight:600; font-size:14.5px; }
+  .locate-row .meta{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .calc-tab{ padding:9px 16px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:13.5px; font-weight:600; color:var(--ink-soft); }
+  .calc-tab.active.motor{ background:var(--motor-soft); color:var(--motor); border-color:transparent; }
+  .calc-tab.active.health{ background:var(--health-soft); color:var(--health); border-color:transparent; }
+  .calc-tab.active.pet{ background:var(--warning-soft); color:var(--warning); border-color:transparent; }
+  .calc-grid{ display:grid; grid-template-columns:1.2fr 1fr; gap:22px; align-items:start; }
+  @media (max-width: 760px){ .calc-grid{ grid-template-columns:1fr; } }
+  .panel{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .chk-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chk-pill{ font-size:12.5px; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--paper); color:var(--ink-soft); user-select:none; }
+  .chk-pill.on{ background:var(--brand); color:var(--on-brand); border-color:transparent; }
+  .premium-out{ text-align:center; padding:10px 0 4px; }
+  .premium-out .amt{ font-family:var(--serif); font-size:40px; font-weight:700; color:var(--brand); }
+  .premium-out .per{ color:var(--ink-soft); font-size:13px; }
+  .breakdown{ margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+  .breakdown .line{ display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--ink-soft); }
+  .breakdown .line b{ color:var(--ink); font-weight:600; }
+
+  /* Modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(10,12,15,.5); z-index:60; display:none; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
+  .modal{ background:var(--surface); border-radius:18px; width:100%; max-width:560px; box-shadow:var(--shadow); }
+  .modal-head{ padding:20px 24px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  .modal-head h3{ font-size:18px; }
+  .modal-close{ background:none; border:none; color:var(--ink-faint); font-size:20px; line-height:1; padding:4px; }
+  .modal-body{ padding:22px 24px; }
+  .modal-foot{ padding:16px 24px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; }
+  .modal-foot .btn{ width:auto; padding:10px 20px; }
+  .step-dots{ display:flex; gap:6px; margin-bottom:20px; }
+  .step-dots span{ height:5px; flex:1; border-radius:4px; background:var(--line); }
+  .step-dots span.on{ background:var(--brand); }
+  .upload-box{ border:1.5px dashed var(--line); border-radius:12px; padding:22px; text-align:center; color:var(--ink-soft); font-size:13.5px; }
+  .thumbs{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .thumbs img{ width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--line); }
+  .assess-box{ background:var(--health-soft); border:1px solid color-mix(in srgb, var(--health) 30%, transparent); border-radius:12px; padding:16px; margin-top:14px; }
+  .assess-box .big{ font-family:var(--serif); font-size:22px; font-weight:700; color:var(--health); }
+  .spinner{ width:30px; height:30px; border:3px solid var(--line); border-top-color:var(--brand); border-radius:50%; animation:spin .8s linear infinite; margin:18px auto; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  textarea{ width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:14px; resize:vertical; min-height:72px; outline:none; }
+  select{ width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:14px; outline:none; }
+
+  .faq{ background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .faq summary{ padding:14px 16px; font-weight:600; font-size:14px; cursor:pointer; list-style:none; display:flex; justify-content:space-between; }
+  .faq summary::-webkit-details-marker{ display:none; }
+  .faq[open] summary{ border-bottom:1px solid var(--line); }
+  .faq p{ padding:14px 16px; margin:0; font-size:13.5px; color:var(--ink-soft); line-height:1.6; }
+
+  .page{ display:none; }
+  .page.active{ display:block; }
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:12px 20px; border-radius:10px; font-size:13.5px; opacity:0; transition:all .25s; z-index:80; pointer-events:none; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:860px){
+    .sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:40; transform:translateX(-100%); transition:transform .2s; box-shadow:0 0 0 2000px rgba(0,0,0,0); }
+    .sidebar.open{ transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.25); }
+    .main{ padding:20px 18px 60px; }
+    .menu-btn{ display:inline-flex !important; }
+  }
+  .menu-btn{ display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--surface); flex:none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brandmark">
+      <div class="crest">US</div>
+      <div class="name"><b>Universal Sompo</b>Customer Portal — Prototype</div>
+    </div>
+
+    <div id="loginStep1">
+      <h2>Welcome back</h2>
+      <div class="login-sub">Log in to manage your policies and claims.</div>
+      <div class="field"><label>Registered mobile or email</label><input id="loginUser" type="text" placeholder="e.g. 98xxxxxx10 or you@email.com" value="dhananjay.jain@pelocal.com"></div>
+      <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Enter any password" value="••••••••••"></div>
+      <button class="btn btn-primary" onclick="goOtp()">Continue</button>
+      <div class="login-demo-note">Demo mode — any credentials work. This screen is a prototype of a modernised version of the current Corporate Portal (which still uses CAPTCHA + legacy session handling).</div>
+    </div>
+
+    <div id="loginStep2" style="display:none">
+      <h2>Verify it's you</h2>
+      <div class="login-sub">Enter the 4‑digit code sent to your registered mobile (demo: any digits).</div>
+      <div class="otp-row">
+        <input maxlength="1" oninput="otpNext(this)"><input maxlength="1" oninput="otpNext(this)"><input maxlength="1" oninput="otpNext(this)"><input maxlength="1" oninput="otpNext(this)">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">Verify &amp; Log in</button>
+      <div class="login-foot">Didn't get a code? <a href="#" onclick="return false" style="color:var(--brand); font-weight:600;">Resend</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brandmark">
+      <div class="crest">US</div>
+      <div class="name"><b>Universal Sompo</b>Customer Portal</div>
+    </div>
+    <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" data-page="policies" onclick="showPage('policies',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+      My Policies
+    </button>
+    <button class="nav-item" data-page="claims" onclick="showPage('claims',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M6 3h8l6 6v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 13h6M9 17h4"/></svg>
+      Claims
+    </button>
+    <button class="nav-item" data-page="calc" onclick="showPage('calc',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15h0"/></svg>
+      Premium Calculator
+    </button>
+    <button class="nav-item" data-page="locate" onclick="showPage('locate',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.686-7-11a7 7 0 1 1 14 0c0 5.314-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      Locate Us
+    </button>
+    <button class="nav-item" data-page="support" onclick="showPage('support',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.6 1.4c0 1.6-2.1 1.8-2.1 3.3M12 17.3h.01"/></svg>
+      Support
+    </button>
+    <div class="sidebar-foot">
+      <button class="nav-item" onclick="location.reload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Log out
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+          <h1>Good to see you, Dhananjay</h1>
+          <div class="sub">Here's what's happening across your policies today.</div>
+        </div>
+        <div class="avatar">DJ</div>
+      </div>
+
+      <div class="banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span><b>Complete Healthcare policy</b> renews in 12 days — <a href="#" onclick="renewPolicy('health'); return false;" style="color:var(--brand); font-weight:700;">renew now</a> to avoid a break in cover.</span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-tile"><div class="num">2</div><div class="lbl">Active policies</div></div>
+        <div class="stat-tile"><div class="num">1</div><div class="lbl">Open claim</div></div>
+        <div class="stat-tile"><div class="num">₹9.9L</div><div class="lbl">Total sum insured</div></div>
+        <div class="stat-tile"><div class="num">12d</div><div class="lbl">Next renewal</div></div>
+      </div>
+
+      <div class="section-head"><h3>Your policies</h3><a href="#" onclick="showPage('policies'); return false;" style="font-size:13px; color:var(--brand); font-weight:600;">View all →</a></div>
+      <div class="policy-grid" id="dashPolicyGrid"></div>
+
+      <div class="section-head"><h3>Recent claims</h3><a href="#" onclick="showPage('claims'); return false;" style="font-size:13px; color:var(--brand); font-weight:600;">View all →</a></div>
+      <div id="dashClaimsList"></div>
+    </div>
+
+    <!-- POLICIES -->
+    <div class="page" id="page-policies">
+      <div class="topbar">
+        <div><h1>My Policies</h1><div class="sub">Motor and health cover, all in one place.</div></div>
+      </div>
+      <div class="policy-grid" id="policyGrid"></div>
+    </div>
+
+    <!-- CLAIMS -->
+    <div class="page" id="page-claims">
+      <div class="topbar">
+        <div><h1>Claims</h1><div class="sub">Track and file claims across your policies.</div></div>
+      </div>
+      <div class="claims-toolbar">
+        <div class="sub" style="margin:0;" id="claimsCount"></div>
+        <button class="btn btn-primary" style="width:auto; padding:10px 18px;" onclick="openClaimModal()">+ File a new claim</button>
+      </div>
+      <div id="claimsList"></div>
+    </div>
+
+    <!-- CALCULATOR -->
+    <div class="page" id="page-calc">
+      <div class="topbar"><div><h1>Premium Calculator</h1><div class="sub">Get an instant estimate for motor or health cover.</div></div></div>
+      <div class="calc-tabs">
+        <button class="calc-tab active motor" id="tabMotor" onclick="setCalcTab('motor')">🚗 Motor</button>
+        <button class="calc-tab health" id="tabHealth" onclick="setCalcTab('health')">➕ Health</button>
+        <button class="calc-tab pet" id="tabPet" onclick="setCalcTab('pet')">🐾 Pet</button>
+      </div>
+      <div class="calc-grid">
+        <div class="panel" id="calcMotorPanel">
+          <div class="row2">
+            <div class="field"><label>Vehicle type</label><select id="m_type"><option>Private Car</option><option>Two-Wheeler</option><option>Commercial Vehicle</option></select></div>
+            <div class="field"><label>City tier</label><select id="m_city"><option>Metro (Tier 1)</option><option>Tier 2</option><option>Tier 3</option></select></div>
+          </div>
+          <div class="field"><label>Insured Declared Value (IDV) — ₹<span id="m_idv_val">4,50,000</span></label>
+            <input type="range" min="100000" max="2000000" step="10000" value="450000" id="m_idv" oninput="document.getElementById('m_idv_val').innerText=Number(this.value).toLocaleString('en-IN'); calcMotor();" style="width:100%;">
+          </div>
+          <div class="field"><label>Policy term</label><select id="m_term"><option>1 year</option><option>2 years</option><option>3 years</option></select></div>
+          <div class="field"><label>Add-on covers</label>
+            <div class="chk-grid">
+              <div class="chk-pill" data-addon="zerodep" onclick="toggleAddon(this)">Zero Depreciation</div>
+              <div class="chk-pill" data-addon="rsa" onclick="toggleAddon(this)">24x7 Roadside Assistance</div>
+              <div class="chk-pill" data-addon="engine" onclick="toggleAddon(this)">Engine Protect</div>
+              <div class="chk-pill" data-addon="ncb" onclick="toggleAddon(this)">NCB Protection</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" id="calcHealthPanel" style="display:none">
+          <div class="row2">
+            <div class="field"><label>Eldest member's age</label><select id="h_age"><option>18–30</option><option selected>31–45</option><option>46–60</option><option>60+</option></select></div>
+            <div class="field"><label>Family size</label><select id="h_family"><option>Individual</option><option selected>Self + Spouse</option><option>Self + Spouse + 2 Kids</option><option>Senior Citizen</option></select></div>
+          </div>
+          <div class="field"><label>Sum insured</label><select id="h_sum"><option>₹3,00,000</option><option selected>₹5,00,000</option><option>₹10,00,000</option><option>₹25,00,000</option></select></div>
+          <div class="field"><label>City tier</label><select id="h_city"><option>Metro (Tier 1)</option><option>Tier 2</option><option>Tier 3</option></select></div>
+          <div class="field"><label>Add-ons</label>
+            <div class="chk-grid">
+              <div class="chk-pill" data-addon="maternity" onclick="toggleAddon(this)">Maternity Cover</div>
+              <div class="chk-pill" data-addon="critical" onclick="toggleAddon(this)">Critical Illness</div>
+              <div class="chk-pill" data-addon="roomrent" onclick="toggleAddon(this)">No Room Rent Cap</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" id="calcPetPanel" style="display:none">
+          <div class="row2">
+            <div class="field"><label>Pet type</label><select id="p_type"><option>Dog</option><option>Cat</option></select></div>
+            <div class="field"><label>Breed size</label><select id="p_size"><option>Small</option><option selected>Medium</option><option>Large</option></select></div>
+          </div>
+          <div class="field"><label>Pet's age</label><select id="p_age"><option>Puppy/Kitten (&lt;1 yr)</option><option selected>Adult (1–7 yrs)</option><option>Senior (7+ yrs)</option></select></div>
+          <div class="field"><label>Sum insured</label><select id="p_sum"><option>₹25,000</option><option selected>₹50,000</option><option>₹1,00,000</option></select></div>
+          <div class="field"><label>Add-ons</label>
+            <div class="chk-grid">
+              <div class="chk-pill" data-addon="petliability" onclick="toggleAddon(this)">Third-Party Liability</div>
+              <div class="chk-pill" data-addon="petopd" onclick="toggleAddon(this)">OPD Cover</div>
+              <div class="chk-pill" data-addon="petwellness" onclick="toggleAddon(this)">Wellness Cover</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="premium-out">
+            <div class="lbl" style="font-size:12.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;">Estimated annual premium</div>
+            <div class="amt" id="premiumAmt">₹6,840</div>
+            <div class="per">incl. 18% GST</div>
+          </div>
+          <div class="breakdown" id="premiumBreakdown"></div>
+          <button class="btn btn-primary" style="margin-top:18px;" onclick="toast('This would continue to a secure checkout — out of scope for this prototype.')">Proceed to buy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCATE -->
+    <div class="page" id="page-locate">
+      <div class="topbar"><div><h1>Locate Us</h1><div class="sub">Find network garages, cashless hospitals, and branches near you.</div></div></div>
+      <div class="field" style="max-width:360px;"><input type="text" placeholder="Search by city or pincode"></div>
+      <div class="locate-tabs">
+        <button class="locate-tab active" id="tabGarage" onclick="setLocateTab('garage')">🔧 Network Garages</button>
+        <button class="locate-tab" id="tabHospital" onclick="setLocateTab('hospital')">🏥 Cashless Hospitals</button>
+        <button class="locate-tab" id="tabBranch" onclick="setLocateTab('branch')">📍 Branch Address</button>
+      </div>
+      <div id="locateGarage">
+        <div class="locate-row"><div class="li"><div class="ic">🔧</div><div><div class="nm">Speedy Motors Service Center</div><div class="meta">Sector 18, Gurugram · 2.3 km</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">🔧</div><div><div class="nm">AutoCare Garage</div><div class="meta">MG Road, Gurugram · 4.1 km</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">🔧</div><div><div class="nm">QuickFix Auto Works</div><div class="meta">Sohna Road, Gurugram · 5.6 km</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+      </div>
+      <div id="locateHospital" style="display:none">
+        <div class="locate-row"><div class="li"><div class="ic">🏥</div><div><div class="nm">Max Healthcare, Saket</div><div class="meta">2.1 km · Cashless</div></div></div><button class="btn-sm" onclick="toast('Calling hospital (demo)')">Call</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">🏥</div><div><div class="nm">Fortis Escorts</div><div class="meta">3.6 km · Cashless</div></div></div><button class="btn-sm" onclick="toast('Calling hospital (demo)')">Call</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">🏥</div><div><div class="nm">Apollo Spectra</div><div class="meta">5.0 km · Cashless</div></div></div><button class="btn-sm" onclick="toast('Calling hospital (demo)')">Call</button></div>
+      </div>
+      <div id="locateBranch" style="display:none">
+        <div class="locate-row"><div class="li"><div class="ic">📍</div><div><div class="nm">USGI Branch — Connaught Place</div><div class="meta">New Delhi · 011-4175 9801</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">📍</div><div><div class="nm">USGI Branch — Cyber City</div><div class="meta">Gurugram · 0124-497 1200</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+        <div class="locate-row"><div class="li"><div class="ic">📍</div><div><div class="nm">USGI Branch — Sector 62</div><div class="meta">Noida · 0120-455 3300</div></div></div><button class="btn-sm" onclick="toast('Opening directions (demo)')">Directions</button></div>
+      </div>
+    </div>
+
+    <!-- SUPPORT -->
+    <div class="page" id="page-support">
+      <div class="topbar"><div><h1>Support</h1><div class="sub">Common questions, answered.</div></div></div>
+      <details class="faq" open><summary>How do I track an existing claim? <span>＋</span></summary><p>Go to Claims from the sidebar — every claim shows a live status timeline from intimation through settlement.</p></details>
+      <details class="faq"><summary>Can I update my KYC details here? <span>＋</span></summary><p>Yes — KYC uploads are part of the buy/renewal journey and sync automatically with your profile.</p></details>
+      <details class="faq"><summary>What happens after I upload claim photos? <span>＋</span></summary><p>Our AI damage-assessment engine reviews the images and returns an indicative estimate in seconds, before a surveyor confirms it.</p></details>
+      <details class="faq"><summary>Is this portal the same as the app?</summary><p>This web portal and the Universal Sompo app share the same account and policy data, so you can start a journey on one and finish on the other.</p></details>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- CLAIM MODAL -->
+<div class="modal-backdrop" id="claimModal">
+  <div class="modal">
+    <div class="modal-head"><h3>File a new claim</h3><button class="modal-close" onclick="closeClaimModal()">×</button></div>
+    <div class="modal-body">
+      <div class="step-dots"><span class="on" id="cd1"></span><span id="cd2"></span><span id="cd3"></span><span id="cd4"></span></div>
+
+      <div id="cstep1">
+        <div class="field"><label>Select policy</label>
+          <select id="claimPolicy">
+            <option value="motor">Motor — Hyundai i20, HR-26-BT-4471 (POL-MT-88213)</option>
+            <option value="health">Health — Family Floater, 3 members (POL-HL-55012)</option>
+          </select>
+        </div>
+        <div class="field"><label>Date of incident</label><input type="date" style="width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper); color:var(--ink);"></div>
+        <div class="field"><label>What happened?</label><textarea placeholder="Briefly describe the incident..." id="claimDesc">Minor front-bumper collision while parking.</textarea></div>
+      </div>
+
+      <div id="cstep2" style="display:none">
+        <div class="field"><label>Upload photos of the damage / documents</label>
+          <div class="upload-box">
+            <div>📷 Drop photos here, or</div>
+            <label class="btn btn-ghost" style="width:auto; display:inline-block; margin-top:10px; padding:9px 16px;">Choose files<input type="file" accept="image/*" multiple style="display:none" onchange="handleFiles(this)"></label>
+          </div>
+          <div class="thumbs" id="thumbWrap"></div>
+        </div>
+      </div>
+
+      <div id="cstep3" style="display:none; text-align:center;">
+        <div id="assessingState">
+          <div class="spinner"></div>
+          <div style="font-size:14px; color:var(--ink-soft);">Running AI damage assessment…</div>
+        </div>
+        <div id="assessedState" style="display:none; text-align:left;">
+          <div class="assess-box" id="assessBox"></div>
+        </div>
+      </div>
+
+      <div id="cstep4" style="display:none; text-align:center; padding:10px 0;">
+        <div style="font-size:40px;">✅</div>
+        <h3 style="margin:10px 0 6px;">Claim intimated</h3>
+        <div class="sub" style="margin-bottom:4px;">Your claim number is</div>
+        <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--brand);" id="newClaimId">CLM-000000</div>
+        <div class="sub" style="margin-top:10px;">You'll get WhatsApp &amp; email updates at every stage.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" style="width:auto;" id="claimBackBtn" onclick="claimBack()">Back</button>
+      <button class="btn btn-primary" style="width:auto;" id="claimNextBtn" onclick="claimNext()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Mock data ----------
+const policies = [
+  { id:'POL-MT-88213', type:'motor', title:'Motor Private Car', sub:'Hyundai i20 Sportz · HR-26-BT-4471', idv:'₹4,80,000', expiry:'14 Mar 2027', premium:'₹7,210 /yr', status:'Active' },
+  { id:'POL-HL-55012', type:'health', title:'Complete Healthcare', sub:'Family Floater · 3 members', idv:'₹5,00,000 SI', expiry:'03 Dec 2026', premium:'₹18,640 /yr', status:'Renewal due' },
+];
+
+let claims = [
+  { id:'CLM-402217', type:'motor', policy:'POL-MT-88213', title:'Front bumper damage', date:'02 Nov 2026', stage:2 },
+];
+let claimSeq = 402218;
+
+// ---------- Login ----------
+function goOtp(){
+  document.getElementById('loginStep1').style.display='none';
+  document.getElementById('loginStep2').style.display='block';
+  document.querySelector('#loginStep2 input').focus();
+}
+function otpNext(el){
+  if(el.value.length===1 && el.nextElementSibling && el.nextElementSibling.tagName==='INPUT') el.nextElementSibling.focus();
+}
+function doLogin(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  renderAll();
+}
+
+// ---------- Nav ----------
+function showPage(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item[data-page]').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  else { const match = document.querySelector('.nav-item[data-page="'+name+'"]'); if(match) match.classList.add('active'); }
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ---------- Render ----------
+function policyCard(p){
+  return `<div class="policy-card ${p.type}">
+    <div class="band"></div>
+    <div class="policy-top">
+      <div>
+        <span class="tag">${p.type==='motor'?'MOTOR':'HEALTH'}</span>
+        <h4>${p.title}</h4>
+        <div class="pno">${p.id} · ${p.sub}</div>
+      </div>
+      <span class="status-pill" style="${p.status==='Renewal due'?'background:var(--warning-soft);color:var(--warning);':''}">${p.status}</span>
+    </div>
+    <div class="perforation"></div>
+    <div class="policy-body">
+      <div class="kv"><div class="k">${p.type==='motor'?'IDV':'Sum insured'}</div><div class="v">${p.idv}</div></div>
+      <div class="kv"><div class="k">Expires</div><div class="v">${p.expiry}</div></div>
+      <div class="kv"><div class="k">Premium</div><div class="v">${p.premium}</div></div>
+      <div class="kv"><div class="k">Policy type</div><div class="v">${p.type==='motor'?'Comprehensive':'Floater'}</div></div>
+    </div>
+    <div class="policy-actions">
+      <button class="btn-sm" onclick="toast('Downloading policy PDF (demo)')">Download</button>
+      <button class="btn-sm" onclick="toast('Opening full policy details (demo)')">View details</button>
+      <button class="btn-sm primary" onclick="renewPolicy('${p.type}')">Renew</button>
+    </div>
+  </div>`;
+}
+
+const stageNames = ['Intimated','Survey scheduled','Assessed','Approved','Settled'];
+function claimTimeline(stage){
+  return `<div class="timeline">` + stageNames.map((s,i)=>`<div class="tl-step ${i<stage?'done':''} ${i===stage?'current':''}"><div class="dot"></div><span>${s}</span></div>`).join('') + `</div>`;
+}
+function claimRow(c){
+  const chipClass = c.stage>=4?'settled':(c.stage>=1?'progress':'intimated');
+  const chipLabel = stageNames[c.stage];
+  return `<div class="claim-row ${c.type}">
+    <div class="claim-left">
+      <div class="claim-icon">${c.type==='motor'?'🚗':'➕'}</div>
+      <div>
+        <div class="claim-id">${c.id} · ${c.title}</div>
+        <div class="claim-meta">${c.policy} · Filed ${c.date}</div>
+        ${claimTimeline(c.stage)}
+      </div>
+    </div>
+    <span class="chip ${chipClass}">${chipLabel}</span>
+  </div>`;
+}
+
+function renderAll(){
+  document.getElementById('dashPolicyGrid').innerHTML = policies.map(policyCard).join('');
+  document.getElementById('policyGrid').innerHTML = policies.map(policyCard).join('');
+  document.getElementById('dashClaimsList').innerHTML = claims.slice(0,2).map(claimRow).join('');
+  document.getElementById('claimsList').innerHTML = claims.map(claimRow).join('') || '<div class="sub">No claims filed yet.</div>';
+  document.getElementById('claimsCount').innerText = claims.length + ' claim' + (claims.length===1?'':'s') + ' on record';
+}
+
+function renewPolicy(type){ toast('Starting renewal journey for your '+type+' policy (demo)'); }
+
+// ---------- Calculator ----------
+let addons = new Set();
+function toggleAddon(el){ const a=el.dataset.addon; if(addons.has(a)){addons.delete(a); el.classList.remove('on');} else {addons.add(a); el.classList.add('on');} if(calcActive==='motor'){ calcMotor(); } else if(calcActive==='health'){ calcHealth(); } else { calcPet(); } }
+let calcActive='motor';
+function setCalcTab(which){
+  calcActive = which;
+  document.getElementById('tabMotor').classList.toggle('active', which==='motor');
+  document.getElementById('tabHealth').classList.toggle('active', which==='health');
+  document.getElementById('tabPet').classList.toggle('active', which==='pet');
+  document.getElementById('calcMotorPanel').style.display = which==='motor'?'block':'none';
+  document.getElementById('calcHealthPanel').style.display = which==='health'?'block':'none';
+  document.getElementById('calcPetPanel').style.display = which==='pet'?'block':'none';
+  addons.clear();
+  document.querySelectorAll('.chk-pill').forEach(p=>p.classList.remove('on'));
+  if(which==='motor'){ calcMotor(); } else if(which==='health'){ calcHealth(); } else { calcPet(); }
+}
+function fmt(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function setPremium(base, lines){
+  const gst = base*0.18;
+  document.getElementById('premiumAmt').innerText = fmt(base+gst);
+  document.getElementById('premiumBreakdown').innerHTML = lines.map(l=>`<div class="line"><span>${l[0]}</span><b>${l[1]}</b></div>`).join('') + `<div class="line"><span>GST (18%)</span><b>${fmt(gst)}</b></div>`;
+}
+function calcMotor(){
+  const idv = Number(document.getElementById('m_idv').value);
+  const cityFactor = {0:1.15, 1:1, 2:0.9}[document.getElementById('m_city').selectedIndex] || 1;
+  let base = idv*0.028*cityFactor;
+  let lines = [['Base premium (OD + TP)', fmt(base)]];
+  if(addons.has('zerodep')){ const v=idv*0.012; base+=v; lines.push(['Zero Depreciation', fmt(v)]); }
+  if(addons.has('rsa')){ base+=499; lines.push(['24x7 Roadside Assistance', '₹499']); }
+  if(addons.has('engine')){ const v=idv*0.006; base+=v; lines.push(['Engine Protect', fmt(v)]); }
+  if(addons.has('ncb')){ base+=349; lines.push(['NCB Protection', '₹349']); }
+  setPremium(base, lines);
+}
+function calcHealth(){
+  const sumMap = [300000,500000,1000000,2500000];
+  const sum = sumMap[document.getElementById('h_sum').selectedIndex];
+  const ageFactor = [0.8,1,1.6,2.3][document.getElementById('h_age').selectedIndex];
+  const famFactor = [1,1.7,2.4,1.3][document.getElementById('h_family').selectedIndex];
+  const cityFactor = {0:1.1,1:1,2:0.92}[document.getElementById('h_city').selectedIndex] || 1;
+  let base = sum*0.012*ageFactor*cityFactor;
+  let lines = [['Base premium', fmt(base)]];
+  const famAdd = base*(famFactor-1);
+  if(famAdd>0){ base+=famAdd; lines.push(['Family loading', fmt(famAdd)]); }
+  if(addons.has('maternity')){ base+=2400; lines.push(['Maternity Cover', '₹2,400']); }
+  if(addons.has('critical')){ base+=1800; lines.push(['Critical Illness', '₹1,800']); }
+  if(addons.has('roomrent')){ base+=1200; lines.push(['No Room Rent Cap', '₹1,200']); }
+  setPremium(base, lines);
+}
+
+function calcPet(){
+  const sumMap = [25000,50000,100000];
+  const sum = sumMap[document.getElementById('p_sum').selectedIndex];
+  const sizeFactor = [0.85,1,1.3][document.getElementById('p_size').selectedIndex];
+  const ageFactor = [0.9,1,1.5][document.getElementById('p_age').selectedIndex];
+  const typeFactor = document.getElementById('p_type').selectedIndex===0 ? 1.05 : 1;
+  let base = sum*0.09*sizeFactor*ageFactor*typeFactor;
+  let lines = [['Base premium', fmt(base)]];
+  if(addons.has('petliability')){ base+=299; lines.push(['Third-Party Liability', '₹299']); }
+  if(addons.has('petopd')){ const v=sum*0.015; base+=v; lines.push(['OPD Cover', fmt(v)]); }
+  if(addons.has('petwellness')){ base+=399; lines.push(['Wellness Cover', '₹399']); }
+  setPremium(base, lines);
+}
+['m_type','m_city','m_term'].forEach(id=>{});
+document.addEventListener('change', (e)=>{
+  if(['m_city','m_term','m_type'].includes(e.target.id)) calcMotor();
+  if(['h_age','h_family','h_sum','h_city'].includes(e.target.id)) calcHealth();
+  if(['p_type','p_size','p_age','p_sum'].includes(e.target.id)) calcPet();
+});
+
+// ---------- Claim modal ----------
+let claimStep=1, uploadedFiles=0;
+function openClaimModal(){
+  claimStep=1; uploadedFiles=0;
+  document.getElementById('thumbWrap').innerHTML='';
+  ['cstep1','cstep2','cstep3','cstep4'].forEach((id,i)=>document.getElementById(id).style.display = i===0?'block':'none');
+  document.getElementById('assessingState').style.display='block';
+  document.getElementById('assessedState').style.display='none';
+  ['cd1','cd2','cd3','cd4'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i===0));
+  document.getElementById('claimNextBtn').innerText='Continue';
+  document.getElementById('claimBackBtn').style.display='inline-block';
+  document.getElementById('claimModal').style.display='flex';
+}
+function closeClaimModal(){ document.getElementById('claimModal').style.display='none'; renderAll(); }
+function claimBack(){
+  if(claimStep<=1) return;
+  claimStep--;
+  updateClaimStep();
+}
+function claimNext(){
+  if(claimStep===4){ closeClaimModal(); return; }
+  if(claimStep===2 && uploadedFiles===0){ toast('Add at least one photo to continue'); return; }
+  claimStep++;
+  updateClaimStep();
+  if(claimStep===3){
+    setTimeout(()=>{
+      document.getElementById('assessingState').style.display='none';
+      document.getElementById('assessedState').style.display='block';
+      const policyType = document.getElementById('claimPolicy').value;
+      const box = document.getElementById('assessBox');
+      if(policyType==='motor'){
+        box.innerHTML = `<div style="font-size:12.5px; color:var(--health); font-weight:700; text-transform:uppercase; letter-spacing:.03em;">AI damage estimate</div><div class="big">₹18,500 – ₹24,000</div><div class="sub">Front bumper + headlight assembly · subject to surveyor confirmation</div>`;
+      } else {
+        box.innerHTML = `<div style="font-size:12.5px; color:var(--health); font-weight:700; text-transform:uppercase; letter-spacing:.03em;">Pre-authorisation</div><div class="big">Cashless eligible</div><div class="sub">Network hospital detected · TPA will confirm final approval</div>`;
+      }
+    }, 1400);
+  }
+  if(claimStep===4){
+    const type = document.getElementById('claimPolicy').value;
+    const polId = type==='motor' ? 'POL-MT-88213' : 'POL-HL-55012';
+    const newId = 'CLM-'+(claimSeq++);
+    document.getElementById('newClaimId').innerText = newId;
+    claims.unshift({ id:newId, type, policy:polId, title: type==='motor' ? document.getElementById('claimDesc').value.slice(0,28) : 'Hospitalisation claim', date:'Today', stage:0 });
+    document.getElementById('claimNextBtn').innerText='Done';
+    document.getElementById('claimBackBtn').style.display='none';
+  }
+}
+function updateClaimStep(){
+  ['cstep1','cstep2','cstep3','cstep4'].forEach((id,i)=>document.getElementById(id).style.display = (i+1===claimStep)?'block':'none');
+  ['cd1','cd2','cd3','cd4'].forEach((id,i)=>document.getElementById(id).classList.toggle('on', i<claimStep));
+}
+function handleFiles(input){
+  const wrap = document.getElementById('thumbWrap');
+  [...input.files].forEach(f=>{
+    uploadedFiles++;
+    const reader = new FileReader();
+    reader.onload = e=>{ const img=document.createElement('img'); img.src=e.target.result; wrap.appendChild(img); };
+    reader.readAsDataURL(f);
+  });
+}
+
+function setLocateTab(which){
+  ['garage','hospital','branch'].forEach(k=>{
+    const cap = k.charAt(0).toUpperCase()+k.slice(1);
+    document.getElementById('tab'+cap).classList.toggle('active', k===which);
+    document.getElementById('locate'+cap).style.display = k===which?'block':'none';
+  });
+}
+
+// ---------- Toast ----------
+function toast(msg){
+  const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show');
+  clearTimeout(window._tt); window._tt=setTimeout(()=>t.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>

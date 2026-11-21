@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Universal Sompo — WhatsApp Chatbot Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --hdr:#075E54; --hdr-ic:#D5E8E4;
+    --bg-chat:#EFEAE2;
+    --bubble-in:#FFFFFF; --bubble-out:#D9FDD3;
+    --ink:#111B21; --ink-soft:#54656F; --ink-faint:#8696A0;
+    --accent:#008069; --link:#027EB5;
+    --surface:#FFFFFF; --line:#E9E9E9;
+    --sans:'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --tick:#53BDEB;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --hdr:#1F2C33; --hdr-ic:#AEBAC1;
+      --bg-chat:#0B141A;
+      --bubble-in:#202C33; --bubble-out:#005C4B;
+      --ink:#E9EDEF; --ink-soft:#AEBAC1; --ink-faint:#8696A0;
+      --accent:#00A884; --link:#53BDEB;
+      --surface:#111B21; --line:#2A373F;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --hdr:#1F2C33; --hdr-ic:#AEBAC1;
+    --bg-chat:#0B141A;
+    --bubble-in:#202C33; --bubble-out:#005C4B;
+    --ink:#E9EDEF; --ink-soft:#AEBAC1; --ink-faint:#8696A0;
+    --accent:#00A884; --link:#53BDEB;
+    --surface:#111B21; --line:#2A373F;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{ margin:0; font-family:var(--sans); background:#00000011; display:flex; justify-content:center; color:var(--ink); }
+  button{ font-family:var(--sans); cursor:pointer; border:none; background:none; }
+
+  .wrap{ width:100%; max-width:460px; min-height:100vh; display:flex; flex-direction:column; background:var(--bg-chat); position:relative; }
+  body::before{ content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); background:var(--hdr); z-index:30; }
+
+  /* Header */
+  .hdr{ background:var(--hdr); color:#fff; padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top,0px)); display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:20; }
+  .hdr .back{ color:var(--hdr-ic); font-size:20px; }
+  .hdr .av{ width:38px; height:38px; border-radius:50%; background:#fff; color:var(--hdr); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex:none; }
+  .hdr .who{ flex:1; min-width:0; }
+  .hdr .who .nm{ font-size:15.5px; font-weight:600; display:flex; align-items:center; gap:5px; }
+  .hdr .who .nm svg{ width:14px; height:14px; }
+  .hdr .who .st{ font-size:12px; color:var(--hdr-ic); }
+  .hdr .acts{ display:flex; gap:18px; color:var(--hdr-ic); font-size:18px; }
+
+  /* Chat */
+  .chat{ flex:1; overflow-y:auto; padding:14px 10px 10px; display:flex; flex-direction:column; gap:3px;
+    background-image: radial-gradient(circle at 20% 15%, rgba(0,0,0,.025) 0 2px, transparent 2px), radial-gradient(circle at 70% 60%, rgba(0,0,0,.025) 0 2px, transparent 2px), radial-gradient(circle at 40% 85%, rgba(0,0,0,.02) 0 2px, transparent 2px);
+    background-size: 90px 90px, 120px 120px, 100px 100px;
+  }
+  .daychip{ align-self:center; background:rgba(255,255,255,.75); color:var(--ink-soft); font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:8px; margin:6px 0 10px; }
+  :root:not([data-theme="light"]) .daychip, :root[data-theme="dark"] .daychip{ background:rgba(255,255,255,.07); }
+
+  .sys-chip{ align-self:center; background:rgba(255,255,255,.75); color:var(--ink-soft); font-size:11.5px; padding:6px 14px; border-radius:8px; margin:10px 0; text-align:center; max-width:80%; }
+  :root:not([data-theme="light"]) .sys-chip, :root[data-theme="dark"] .sys-chip{ background:rgba(255,255,255,.07); }
+
+  .row{ display:flex; margin-bottom:2px; }
+  .row.in{ justify-content:flex-start; }
+  .row.out{ justify-content:flex-end; }
+
+  .msg{ max-width:78%; padding:7px 9px 8px 10px; border-radius:9px; font-size:14px; line-height:1.4; position:relative; box-shadow:0 1px 1px rgba(0,0,0,.08); }
+  .msg.in{ background:var(--bubble-in); border-top-left-radius:2px; }
+  .msg.out{ background:var(--bubble-out); border-top-right-radius:2px; }
+  .msg .agent-tag{ font-size:12.5px; font-weight:700; color:#06967B; margin-bottom:2px; display:block; }
+  .msg img.att{ width:100%; max-width:220px; border-radius:7px; display:block; margin-bottom:5px; }
+  .meta{ display:flex; justify-content:flex-end; align-items:center; gap:3px; font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
+  .meta svg{ width:14px; height:10px; }
+
+  .btnstack{ margin-top:7px; background:var(--surface); border-radius:8px; overflow:hidden; box-shadow:0 1px 1px rgba(0,0,0,.08); }
+  .btnstack button{ display:block; width:100%; text-align:center; padding:10px 8px; font-size:14px; font-weight:600; color:var(--link); border-top:1px solid var(--line); }
+  .btnstack button:first-child{ border-top:none; }
+  .btnstack button:active{ background:rgba(0,0,0,.04); }
+
+  .typing{ display:inline-flex; gap:4px; padding:11px 13px; background:var(--bubble-in); border-radius:9px; border-top-left-radius:2px; box-shadow:0 1px 1px rgba(0,0,0,.08); }
+  .typing span{ width:6px; height:6px; border-radius:50%; background:var(--ink-faint); animation:bounce 1.1s infinite; }
+  .typing span:nth-child(2){ animation-delay:.15s; } .typing span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:.5;} 30%{ transform:translateY(-4px); opacity:1; } }
+
+  /* Composer */
+  .composer{ display:flex; align-items:center; gap:7px; padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px)); background:transparent; }
+  .composer .pillbox{ flex:1; display:flex; align-items:center; gap:6px; background:var(--surface); border-radius:24px; padding:8px 8px 8px 14px; }
+  .composer .pillbox input{ flex:1; border:none; outline:none; background:transparent; font-size:14.5px; color:var(--ink); font-family:var(--sans); }
+  .composer .ic{ font-size:20px; color:var(--ink-faint); flex:none; }
+  .sendbtn{ width:42px; height:42px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; flex:none; }
+
+  .menu-hint{ text-align:center; font-size:11px; color:var(--ink-faint); padding:2px 20px 6px; }
+
+  ::-webkit-scrollbar{ width:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="back">←</div>
+    <div class="av" id="hdrAv">US</div>
+    <div class="who">
+      <div class="nm" id="hdrName">Universal Sompo <svg viewBox="0 0 24 24" fill="#53BDEB"><path d="M12 2 14.5 5l4-1 1 4 3 2.5-3 2.5-1 4-4-1-2.5 3-2.5-3-4 1-1-4-3-2.5 3-2.5 1-4 4 1Z"/><path d="M9 12l2 2 4-4" fill="none" stroke="#fff" stroke-width="1.6"/></svg></div>
+      <div class="st" id="hdrStatus">Business Account · typically replies instantly</div>
+    </div>
+    <div class="acts"><span>📹</span><span>📞</span><span>⋮</span></div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="daychip">Today</div>
+  </div>
+  <div class="menu-hint">Type anything, or tap the buttons above a message</div>
+
+  <div class="composer">
+    <div class="pillbox">
+      <span class="ic">😊</span>
+      <input id="txt" type="text" placeholder="Message" onkeydown="if(event.key==='Enter') send()">
+      <label class="ic" style="cursor:pointer;">📎<input type="file" accept="image/*" style="display:none" onchange="attachPhoto(this)"></label>
+    </div>
+    <button class="sendbtn" onclick="send()">➤</button>
+  </div>
+</div>
+
+<script>
+const chat = document.getElementById('chat');
+let claimSeq = 402230;
+let policySeq = 88341;
+let context = { lastTopic:null, claimType:null, quoteType:null, awaiting:null, pendingPurchase:null };
+let agentMode = false;
+
+function scrollDown(){ chat.scrollTop = chat.scrollHeight; }
+function tick2(read){
+  return `<svg viewBox="0 0 16 11" fill="none"><path d="M1 5.5 4 8.5 10 1.5" stroke="${read?'#53BDEB':'#8696A0'}" stroke-width="1.6"/><path d="M6 5.5 9 8.5 15 1.5" stroke="${read?'#53BDEB':'#8696A0'}" stroke-width="1.6"/></svg>`;
+}
+function now(){ const d=new Date(); let h=d.getHours(), m=d.getMinutes(); const ap=h>=12?'pm':'am'; h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap; }
+function nextYear(){ const d=new Date(); d.setFullYear(d.getFullYear()+1); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+
+function addUserMsg(text, imgSrc){
+  const row = document.createElement('div'); row.className='row out';
+  row.innerHTML = `<div class="msg out">${imgSrc?`<img class="att" src="${imgSrc}">`:''}${text?escapeHtml(text):''}<div class="meta">${now()} ${tick2(false)}</div></div>`;
+  chat.appendChild(row); scrollDown();
+  setTimeout(()=>{ const ticks = row.querySelector('svg'); if(ticks) ticks.outerHTML = tick2(true); }, 900);
+}
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showTyping(cb, delay=1100){
+  const row = document.createElement('div'); row.className='row in'; row.id='typingRow';
+  row.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+  chat.appendChild(row); scrollDown();
+  setTimeout(()=>{ row.remove(); cb(); }, delay);
+}
+
+function addBotMsg({text, buttons, agent}){
+  const row = document.createElement('div'); row.className='row in';
+  let inner = '';
+  if(agent) inner += `<span class="agent-tag">${agent}</span>`;
+  inner += `${text}<div class="meta" style="justify-content:flex-start;">${now()}</div>`;
+  if(buttons && buttons.length){
+    inner += `<div class="btnstack">` + buttons.map(b=>`<button onclick="handleButton('${b.id}')">${b.label}</button>`).join('') + `</div>`;
+  }
+  row.innerHTML = `<div class="msg in">${inner}</div>`;
+  chat.appendChild(row); scrollDown();
+}
+
+function botSay(opts, delay){ showTyping(()=>addBotMsg(opts), delay); }
+
+function mainMenu(){
+  context = { lastTopic:null, claimType:null, quoteType:null, awaiting:null, pendingPurchase:null };
+  botSay({ text:"What would you like to do?", buttons:[
+    {id:'menu_policy', label:'📄 Check Policy'},
+    {id:'menu_claim', label:'🚗 File a Claim'},
+    {id:'menu_quote', label:'💰 Get a Quote'},
+  ]});
+}
+
+function setStatus(s){ document.getElementById('hdrStatus').innerText = s; }
+
+function handleButton(id){
+  // echo the tapped label as the user's message for realism
+  const map = {
+    menu_policy:'Check Policy', menu_claim:'File a Claim', menu_quote:'Get a Quote',
+    claim_motor:'Motor', claim_health:'Health', quote_motor:'Motor', quote_health:'Health',
+    idv_3:'₹3,00,000', idv_5:'₹5,00,000', idv_8:'₹8,00,000',
+    age_1:'18–30', age_2:'31–45', age_3:'46+',
+    sum_3:'₹3,00,000', sum_5:'₹5,00,000', sum_10:'₹10,00,000',
+    track:'Track this claim', buy:'Buy Now', main_menu:'Main Menu', talk_agent:'Talk to an agent',
+    pay_now:'💳 Pay Now', download_policy:'📄 Download Policy Document', consent_continue:'✅ I agree to the terms & continue',
+    feedback_yes:'👍 Yes', feedback_no:'👎 No'
+  };
+  addUserMsg(map[id] || id);
+  route(id);
+}
+
+function showPaymentRequest(){
+  const amt = context.pendingPurchase ? context.pendingPurchase.premium : 0;
+  botSay({ text:`💳 <b>Payment request</b><br>Amount: ₹${amt.toLocaleString('en-IN')}<br><span style="color:var(--ink-soft); font-size:12.5px;">Secured by UPI · Universal Sompo</span>`, buttons:[{id:'pay_now',label:'Pay ₹'+amt.toLocaleString('en-IN')+' via UPI'},{id:'main_menu',label:'⬅ Main Menu'}] });
+}
+
+function route(intent){
+  if(intent==='main_menu'){ mainMenu(); return; }
+  if(intent==='talk_agent'){ handoffToAgent(); return; }
+
+  if(intent==='menu_policy'){
+    context.lastTopic='policy';
+    botSay({ text:"Sure — please type your registered mobile number or policy number. (Any digits work for this demo.)" });
+    context.awaiting='policy_lookup';
+    return;
+  }
+  if(intent==='menu_claim'){
+    context.lastTopic='claim';
+    botSay({ text:"Which policy is this claim for?", buttons:[{id:'claim_motor',label:'🚗 Motor'},{id:'claim_health',label:'➕ Health'},{id:'main_menu',label:'⬅ Main Menu'}] });
+    return;
+  }
+  if(intent==='claim_motor' || intent==='claim_health'){
+    context.claimType = intent==='claim_motor' ? 'motor' : 'health';
+    context.awaiting = 'claim_desc';
+    botSay({ text: context.claimType==='motor' ? "Got it. In a line, what happened to the vehicle?" : "Understood. Which hospital are you at or planning to visit?" });
+    return;
+  }
+  if(intent==='menu_quote'){
+    context.lastTopic='quote';
+    botSay({ text:"What would you like a quote for?", buttons:[{id:'quote_motor',label:'🚗 Motor Insurance'},{id:'quote_health',label:'➕ Health Insurance'},{id:'main_menu',label:'⬅ Main Menu'}] });
+    return;
+  }
+  if(intent==='quote_motor'){
+    context.quoteType='motor';
+    botSay({ text:"What's your car's approximate IDV (Insured Declared Value)?", buttons:[{id:'idv_3',label:'₹3,00,000'},{id:'idv_5',label:'₹5,00,000'},{id:'idv_8',label:'₹8,00,000'}] });
+    return;
+  }
+  if(['idv_3','idv_5','idv_8'].includes(intent)){
+    const idv = {idv_3:300000, idv_5:500000, idv_8:800000}[intent];
+    const premium = Math.round(idv*0.028*1.18);
+    showQuote('Motor Private Car', premium, `IDV ₹${idv.toLocaleString('en-IN')} · Comprehensive cover · incl. GST`);
+    return;
+  }
+  if(intent==='quote_health'){
+    context.quoteType='health';
+    botSay({ text:"What's the eldest member's age bracket?", buttons:[{id:'age_1',label:'18–30'},{id:'age_2',label:'31–45'},{id:'age_3',label:'46+'}] });
+    return;
+  }
+  if(['age_1','age_2','age_3'].includes(intent)){
+    context.ageBracket = intent;
+    botSay({ text:"And what sum insured would you like?", buttons:[{id:'sum_3',label:'₹3,00,000'},{id:'sum_5',label:'₹5,00,000'},{id:'sum_10',label:'₹10,00,000'}] });
+    return;
+  }
+  if(['sum_3','sum_5','sum_10'].includes(intent)){
+    const sum = {sum_3:300000, sum_5:500000, sum_10:1000000}[intent];
+    const ageFactor = {age_1:0.85, age_2:1, age_3:1.6}[context.ageBracket] || 1;
+    const premium = Math.round(sum*0.012*ageFactor*1.18);
+    showQuote('Family Health Cover', premium, `Sum insured ₹${sum.toLocaleString('en-IN')} · incl. GST`);
+    return;
+  }
+  if(intent==='buy'){
+    const p = context.pendingPurchase || {name:'Policy', premium:0};
+    const bullets = context.quoteType==='motor'
+      ? ['✓ Own-damage + third-party cover','✓ Cashless garage network','✓ 24×7 roadside assistance add-on available']
+      : ['✓ Cashless hospitalisation at network hospitals','✓ Pre &amp; post-hospitalisation cover','✓ No-claim bonus on renewal'];
+    botSay({ text:`Here's what you're buying — please review before paying:<br><br><b>${p.name}</b> · ₹${p.premium.toLocaleString('en-IN')}/year<br><br>${bullets.join('<br>')}<br><br><a href="#" style="color:var(--link);" onclick="toast('Opening policy wording PDF (demo)'); return false;">📄 View full policy wording</a>`, buttons:[{id:'consent_continue',label:'✅ I agree to the terms & continue'},{id:'main_menu',label:'⬅ Main Menu'}] });
+    return;
+  }
+  if(intent==='consent_continue'){
+    showTyping(()=>{
+      const row = document.createElement('div'); row.className='row in';
+      row.innerHTML = `<div class="msg in">🔒 Redirecting you to a secure payment page…</div>`;
+      chat.appendChild(row); scrollDown();
+      setTimeout(()=>{ row.remove(); showPaymentRequest(); }, 1200);
+    }, 500);
+    return;
+  }
+  if(intent==='pay_now'){
+    showTyping(()=>{
+      const row = document.createElement('div'); row.className='row in';
+      row.innerHTML = `<div class="msg in">⏳ Processing payment…</div>`;
+      chat.appendChild(row); scrollDown();
+      setTimeout(()=>{
+        row.remove();
+        const p = context.pendingPurchase || {name:'Policy', premium:0};
+        const polId = 'POL-'+(p.name.includes('Motor')?'MT':'HL')+'-'+(policySeq++);
+        addBotMsg({ text:`✅ <b>Payment successful!</b><br><br>Your <b>${p.name}</b> is now active.<br><br><b>${polId}</b><br>Premium paid: ₹${p.premium.toLocaleString('en-IN')}<br>Valid: Today – ${nextYear()}<br><br><span style="font-size:11.5px; color:var(--ink-soft);">📌 You have a 15-day free-look period to review and cancel this policy if needed.</span>`, buttons:[{id:'download_policy',label:'📄 Download Policy Document'},{id:'main_menu',label:'⬅ Main Menu'}] });
+      }, 1500);
+    }, 500);
+    return;
+  }
+  if(intent==='download_policy'){
+    const row = document.createElement('div'); row.className='row in';
+    row.innerHTML = `<div class="msg in" style="display:flex; align-items:center; gap:10px;"><div style="font-size:26px;">📄</div><div><div style="font-weight:600; font-size:13.5px;">Policy_Document.pdf</div><div style="font-size:11.5px; color:var(--ink-soft);">214 KB · PDF</div></div></div>`;
+    chat.appendChild(row); scrollDown();
+    botSay({ text:"You'll also get this by email and in your Pulz app wallet.", buttons:[{id:'main_menu',label:'⬅ Main Menu'}] });
+    return;
+  }
+  if(intent==='track'){
+    botSay({ text:`Here's the latest on <b>${context.lastClaimId||'your claim'}</b>:<br><br>✅ Intimated<br>⏳ Survey scheduled — tomorrow, 11 AM–1 PM<br>⬜ Assessment<br>⬜ Approval<br>⬜ Settlement`, buttons:[{id:'main_menu',label:'⬅ Main Menu'}] });
+    return;
+  }
+  // fallback
+  botSay({ text:"Sorry, I didn't quite catch that 🤔 Here's what I can help with:", buttons:[
+    {id:'menu_policy', label:'📄 Check Policy'},
+    {id:'menu_claim', label:'🚗 File a Claim'},
+    {id:'menu_quote', label:'💰 Get a Quote'},
+  ]});
+}
+
+function showQuote(name, premium, sub){
+  context.pendingPurchase = { name, premium };
+  botSay({ text:`Here's your instant quote for <b>${name}</b>:<br><br>💰 <b>₹${premium.toLocaleString('en-IN')}/year</b><br><span style="color:var(--ink-soft); font-size:12.5px;">${sub}</span>`, buttons:[{id:'buy',label:'✅ Buy Now'},{id:'main_menu',label:'⬅ Main Menu'}] });
+}
+
+function attachPhoto(input){
+  const f = input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    addUserMsg(null, e.target.result);
+    if(context.awaiting==='claim_photo'){
+      context.awaiting=null;
+      showTyping(()=>{
+        const row = document.createElement('div'); row.className='row in';
+        row.innerHTML = `<div class="msg in">🔎 Analysing photo with our AI damage-assessment engine…</div>`;
+        chat.appendChild(row); scrollDown();
+        setTimeout(()=>{
+          row.remove();
+          const claimId = 'CLM-'+(claimSeq++);
+          context.lastClaimId = claimId;
+          addBotMsg({ text: context.claimType==='motor'
+            ? `✅ Estimated repair cost: <b>₹18,500–₹24,000</b> (subject to surveyor confirmation).<br><br>Your claim number is <b>${claimId}</b>. You'll get updates right here on WhatsApp.`
+            : `✅ This looks like a network hospital — pre-authorisation <b>CLM-${claimId.slice(4)}</b> has been raised.<br><br>You'll get the approval status here on WhatsApp.`,
+            buttons:[{id:'track',label:'📍 Track this claim'},{id:'main_menu',label:'⬅ Main Menu'}] });
+        }, 1500);
+      }, 500);
+    }
+  };
+  reader.readAsDataURL(f);
+}
+
+function handoffToAgent(){
+  setStatus('Connecting you to an agent…');
+  botSay({ text:"Sure, connecting you to a live agent now 🔄" }, 900);
+  setTimeout(()=>{
+    const sys = document.createElement('div'); sys.className='sys-chip'; sys.innerText='🙋 Priya from Universal Sompo Support has joined the chat';
+    chat.appendChild(sys); scrollDown();
+    document.getElementById('hdrAv').innerText='P';
+    document.getElementById('hdrName').innerHTML='Priya · Support';
+    setStatus('Online');
+    setTimeout(()=>{
+      const topicNote = context.lastTopic ? ` I can see you were just looking at ${context.lastTopic==='claim'?'a claim':(context.lastTopic==='quote'?'a quote':'your policy')}.` : '';
+      addBotMsg({ agent:'Priya · Agent', text:`Hi! This is Priya from the Universal Sompo support team.${topicNote} How can I help further?`, buttons:[{id:'feedback_yes',label:'This helped, thanks'},{id:'main_menu',label:'⬅ Back to bot'}] });
+    }, 1200);
+  }, 1600);
+}
+
+function send(){
+  const input = document.getElementById('txt');
+  const val = input.value.trim();
+  if(!val) return;
+  addUserMsg(val);
+  input.value='';
+
+  const lower = val.toLowerCase();
+
+  // Escape hatch: works even mid-flow, unlike a rigid slot-filling bot that
+  // keeps re-asking for the same input no matter what you type.
+  if(lower.includes('agent') || lower.includes('human')){ handoffToAgent(); return; }
+
+  if(context.awaiting==='policy_lookup'){
+    context.awaiting=null;
+    showTyping(()=>{
+      addBotMsg({ text:`Found it ✅<br><br><b>Motor — Hyundai i20</b><br>POL-MT-88213 · Active · Expires 14 Mar '27<br><br><b>Complete Healthcare</b><br>POL-HL-55012 · Renewal due · Expires 03 Dec '26`, buttons:[{id:'main_menu',label:'⬅ Main Menu'},{id:'talk_agent',label:'🙋 Talk to an agent'}] });
+    });
+    return;
+  }
+  if(context.awaiting==='claim_desc'){
+    context.awaiting='claim_photo';
+    showTyping(()=>{
+      addBotMsg({ text: context.claimType==='motor'
+        ? "Thanks, noted. Now please attach a photo of the damage using the 📎 icon below."
+        : "Thanks, noted. If you have a discharge summary or bill, attach it with the 📎 icon below — or send any photo for this demo." });
+    });
+    return;
+  }
+
+  if(lower.includes('claim')){ route('menu_claim'); return; }
+  if(lower.includes('polic')){ route('menu_policy'); return; }
+  if(lower.includes('quote') || lower.includes('premium') || lower.includes('buy')){ route('menu_quote'); return; }
+  if(lower.includes('menu') || lower.includes('hi') || lower.includes('hello')){ mainMenu(); return; }
+
+  showTyping(()=>{
+    addBotMsg({ text:"I'm not sure I understood that 🤔 Here's what I can help with:", buttons:[
+      {id:'menu_policy', label:'📄 Check Policy'},
+      {id:'menu_claim', label:'🚗 File a Claim'},
+      {id:'menu_quote', label:'💰 Get a Quote'},
+    ]});
+  });
+}
+
+// Kickoff
+showTyping(()=>{
+  addBotMsg({ text:"👋 Welcome to <b>Universal Sompo</b>! I'm your virtual assistant. I can help you check a policy, file a claim, or get a quote." });
+  setTimeout(mainMenu, 600);
+}, 700);
+</script>
+</body>
+</html>
